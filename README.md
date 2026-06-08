@@ -1,6 +1,6 @@
 ﻿# mpv Windows 便携版全家桶
 
-一键更新 mpv 播放器 + ffmpeg + yt-dlp + 配置，所有 GitHub 下载自带三级回退。
+一键更新 mpv 播放器 + ffmpeg + yt-dlp + portable_config 配置。
 
 ## 文件结构
 
@@ -81,13 +81,6 @@ Get-Help .\mpv-update.ps1
 | youtube-dl | yt-dl.org |
 | portable_config | `wzyoct/mpv-config` GitHub |
 
-### 下载回退机制
-
-所有 GitHub 下载走三级回退，确保网络受限时也能更新：
-
-1. **直连** `https://github.com/...`
-2. **gh-proxy** `https://gh-proxy.com/https://github.com/...`
-3. **ghfast** `https://ghfast.top/https://github.com/...`
 
 ### 首次运行设置
 
@@ -126,3 +119,4 @@ installer\mpv-uninstall.bat    # 移除所有注册项
 ## 许可
 
 mpv 及其组件遵循各自的开源许可。更新脚本为公共领域。
+
