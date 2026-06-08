@@ -1,28 +1,11 @@
-﻿# Large binaries
-mpv.exe
-mpv.com
-ffmpeg.exe
-yt-dlp.exe
-youtube-dl.exe
-d3dcompiler_43.dll
+﻿# Binaries
+fonts/
+scripts/uosc/bin/
 
-
-# Not to sync
-installer/
-mpv/
-doc/
-mpv-install.bat
-mpv-uninstall.bat
-updater.ps1
-mpbindings.png
-fonts.conf
-
+# Archives
+*.7z
+*.zip
 
 # System
 Thumbs.db
 Desktop.ini
-
-# Generated config assets
-portable_config/fonts/
-portable_config/scripts/uosc/bin/
-
