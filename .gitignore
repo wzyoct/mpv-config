@@ -1,10 +1,5 @@
-﻿# Binaries
-fonts/
+﻿# Only exclude the binary ziggy helpers
 scripts/uosc/bin/
-
-# Archives
-*.7z
-*.zip
 
 # System
 Thumbs.db

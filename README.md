@@ -62,3 +62,11 @@ git pull
 
 - mpv 0.37.0+
 - Windows 10/11（64 位）
+
+## 字体
+
+首次 clone 后需要手动下载 uosc 图标字体：
+
+1. 从 [uosc releases](https://github.com/tomasklaen/uosc/releases/latest) 下载 `uosc.zip`
+2. 解压 `fonts/` 目录到 `portable_config/fonts/`
+3. 运行一次 mpv 确认 UI 正常显示
