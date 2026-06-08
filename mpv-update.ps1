@@ -28,11 +28,6 @@ $Script:ConfigBranch = "master"
 $Script:ConfigDir = "portable_config"
 $Script:ConfigVersionFile = Join-Path $Script:ScriptRoot "$Script:ConfigDir\.config-version"
 
-$Script:GithubProxies = @(
-    "https://github.com/",
-    "https://gh-proxy.com/https://github.com/",
-    "https://ghfast.top/https://github.com/"
-)
 
 # ============================================================
 # Helper: 7z detection and extraction
@@ -68,46 +63,6 @@ function Expand-Archive7z {
     if ($LASTEXITCODE -ne 0) { throw "7z extraction failed for $File" }
 }
 
-# ============================================================
-# Helper: Download with GitHub fallback (direct + 2 proxies)
-# ============================================================
-function Invoke-GitHubDownload {
-    param(
-        [string]$DirectUrl,
-        [string]$OutFile,
-        [string]$Description = "file",
-        [int]$TimeoutSec = 60
-    )
-    $urls = @($DirectUrl)
-    foreach ($proxy in $Script:GithubProxies) {
-        if ($proxy -eq $Script:GithubProxies[0]) { continue }
-        $wrapped = $DirectUrl -replace '^https://github\.com/', $proxy
-        if ($wrapped -ne $DirectUrl) { $urls += $wrapped }
-    }
-    $labels = @("Direct", "gh-proxy", "ghfast")
-    for ($i = 0; $i -lt $urls.Count -and $i -lt $labels.Count; $i++) {
-        $url = $urls[$i]
-        $label = $labels[$i]
-        Write-Host "  [$label] $url" -ForegroundColor Gray
-        try {
-            if (Test-Path $OutFile) { Remove-Item -Force $OutFile }
-            Invoke-WebRequest -Uri $url -OutFile $OutFile -UserAgent $Script:UserAgent `
-                -UseBasicParsing -TimeoutSec $TimeoutSec
-            if (Test-Path $OutFile) {
-                $bytes = (Get-Item $OutFile).Length
-                if ($bytes -gt 100) {
-                    Write-Host "  OK  $bytes bytes" -ForegroundColor Green
-                    return $true
-                }
-            }
-            Write-Host "  WARN  File too small, trying next..." -ForegroundColor DarkYellow
-        } catch {
-            Write-Host "  FAIL  $($_.Exception.Message)" -ForegroundColor DarkYellow
-        }
-        Remove-Item $OutFile -Force -ErrorAction SilentlyContinue
-    }
-    return $false
-}
 
 # ============================================================
 # Helper: Admin check
@@ -247,18 +202,12 @@ function Get-Latest-Mpv {
         "daily" {
             $apiUrl = "https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest"
             $json = $null
-            $apiUrls = @($apiUrl)
-            foreach ($proxy in $Script:GithubProxies) {
-                if ($proxy -eq $Script:GithubProxies[0]) { continue }
-                $wrapped = $apiUrl -replace '^https://api\.github\.com/', $proxy -replace 'github\.com/', $proxy
-                if ($wrapped -ne $apiUrl) { $apiUrls += $wrapped }
-            }
-            foreach ($url in $apiUrls) {
-                try {
-                    $json = Invoke-WebRequest $url -MaximumRedirection 0 -ErrorAction Ignore -UseBasicParsing | ConvertFrom-Json
-                    if ($json -and $json.assets) { break }
-                } catch { }
-            }
+
+            try {
+
+                $json = Invoke-WebRequest $apiUrl -MaximumRedirection 0 -ErrorAction Ignore -UseBasicParsing | ConvertFrom-Json
+
+            } catch { }
             if ($json -and $json.assets) {
                 $filename = $json.assets | Where-Object { $_.name -Match "mpv-$Arch" } | Select-Object -ExpandProperty name
                 $download_link = $json.assets | Where-Object { $_.name -Match "mpv-$Arch" } | Select-Object -ExpandProperty browser_download_url
@@ -361,8 +310,10 @@ function Update-Mpv {
         }
     } else {
         Write-Host "  Downloading $($Info.RemoteName)..." -ForegroundColor Yellow
-        if (-not (Invoke-GitHubDownload $Info.DownloadUrl $Info.RemoteName "mpv archive")) {
-            Write-Host "  ERROR: All download sources failed" -ForegroundColor Red
+        try {
+            Invoke-WebRequest -Uri $Info.DownloadUrl -UserAgent $Script:UserAgent -OutFile $Info.RemoteName
+        } catch {
+            Write-Host "  ERROR: Download failed - $($_.Exception.Message)" -ForegroundColor Red
             return $false
         }
     }
@@ -379,18 +330,12 @@ function Get-Latest-FFmpeg {
     param([string]$Arch)
     $apiUrl = "https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest"
     $json = $null
-    $apiUrls = @($apiUrl)
-    foreach ($proxy in $Script:GithubProxies) {
-        if ($proxy -eq $Script:GithubProxies[0]) { continue }
-        $wrapped = $apiUrl -replace '^https://api\.github\.com/', $proxy -replace 'github\.com/', $proxy
-        if ($wrapped -ne $apiUrl) { $apiUrls += $wrapped }
-    }
-    foreach ($url in $apiUrls) {
-        try {
-            $json = Invoke-WebRequest $url -MaximumRedirection 0 -ErrorAction Ignore -UseBasicParsing | ConvertFrom-Json
-            if ($json -and $json.assets) { break }
-        } catch { }
-    }
+
+    try {
+
+        $json = Invoke-WebRequest $apiUrl -MaximumRedirection 0 -ErrorAction Ignore -UseBasicParsing | ConvertFrom-Json
+
+    } catch { }
     if (-not $json -or -not $json.assets) { return $null, $null }
     $filename = $json.assets | Where-Object { $_.name -Match "ffmpeg-$Arch" } | Select-Object -ExpandProperty name
     $download_link = $json.assets | Where-Object { $_.name -Match "ffmpeg-$Arch" } | Select-Object -ExpandProperty browser_download_url
@@ -463,10 +408,12 @@ function Test-FFmpegUpdateNeeded {
 function Update-FFmpeg {
     param([PSCustomObject]$Info)
     Write-Host "  Downloading $($Info.RemoteName)..." -ForegroundColor Yellow
-    if (-not (Invoke-GitHubDownload $Info.DownloadUrl $Info.RemoteName "ffmpeg archive")) {
-        Write-Host "  ERROR: All download sources failed" -ForegroundColor Red
-        return $false
-    }
+    try {
+            Invoke-WebRequest -Uri $Info.DownloadUrl -UserAgent $Script:UserAgent -OutFile $Info.RemoteName
+        } catch {
+            Write-Host "  ERROR: Download failed - $($_.Exception.Message)" -ForegroundColor Red
+            return $false
+        }
     Initialize-7z
     Expand-Archive7z $Info.RemoteName
     Cleanup-Archive $Info.RemoteName
@@ -482,18 +429,12 @@ function Get-Latest-Ytplugin {
         "yt-dlp*" {
             $apiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest"
             $json = $null
-            $apiUrls = @($apiUrl)
-            foreach ($proxy in $Script:GithubProxies) {
-                if ($proxy -eq $Script:GithubProxies[0]) { continue }
-                $wrapped = $apiUrl -replace '^https://api\.github\.com/', $proxy -replace 'github\.com/', $proxy
-                if ($wrapped -ne $apiUrl) { $apiUrls += $wrapped }
-            }
-            foreach ($url in $apiUrls) {
-                try {
-                    $json = Invoke-WebRequest $url -MaximumRedirection 0 -ErrorAction Ignore -UseBasicParsing | ConvertFrom-Json
-                    if ($json -and $json.tag_name) { break }
-                } catch { }
-            }
+
+            try {
+
+                $json = Invoke-WebRequest $apiUrl -MaximumRedirection 0 -ErrorAction Ignore -UseBasicParsing | ConvertFrom-Json
+
+            } catch { }
             if ($json -and $json.tag_name) { return $json.tag_name }
             return $null
         }
@@ -593,8 +534,10 @@ function Update-Ytplugin {
             $directUrl = "https://github.com/yt-dlp/yt-dlp/releases/download/$version/$fileName"
             Write-Host "  Downloading yt-dlp $version ..." -ForegroundColor Yellow
             $dlFile = Join-Path $Script:ScriptRoot "yt-dlp.exe"
-            if (-not (Invoke-GitHubDownload $directUrl $dlFile "yt-dlp")) {
-                Write-Host "  ERROR: All download sources failed" -ForegroundColor Red
+            try {
+                Invoke-WebRequest -Uri $directUrl -UserAgent $Script:UserAgent -OutFile $dlFile
+            } catch {
+                Write-Host "  ERROR: Download failed - $($_.Exception.Message)" -ForegroundColor Red
                 return $false
             }
         } else {
@@ -616,19 +559,11 @@ function Update-Ytplugin {
 # Component: portable_config
 # ============================================================
 function Get-Latest-ConfigCommit {
-    $apiUrl = "https://api.github.com/repos/$Script:ConfigRepo/commits/$Script:ConfigBranch"
-    $apiUrls = @($apiUrl)
-    foreach ($proxy in $Script:GithubProxies) {
-        if ($proxy -eq $Script:GithubProxies[0]) { continue }
-        $wrapped = $apiUrl -replace '^https://api\.github\.com/', $proxy -replace 'github\.com/', $proxy
-        if ($wrapped -ne $apiUrl) { $apiUrls += $wrapped }
-    }
-    foreach ($url in $apiUrls) {
-        try {
-            $json = Invoke-WebRequest $url -MaximumRedirection 0 -ErrorAction Ignore -UseBasicParsing | ConvertFrom-Json
-            if ($json -and $json.sha) { return $json.sha.Substring(0, 7) }
-        } catch { }
-    }
+    try {
+        $json = Invoke-WebRequest $apiUrl -MaximumRedirection 0 -ErrorAction Ignore -UseBasicParsing | ConvertFrom-Json
+        if ($json -and $json.sha) { return $json.sha.Substring(0, 7) }
+    } catch { }
+    return $null
     return $null
 }
 
@@ -681,8 +616,10 @@ function Update-Config {
     $directUrl = "https://github.com/$Script:ConfigRepo/archive/refs/heads/$Script:ConfigBranch.zip"
     $zipFile = Join-Path $Script:ScriptRoot "mpv-config-update.zip"
     Write-Host "  Downloading config archive..." -ForegroundColor Yellow
-    if (-not (Invoke-GitHubDownload $directUrl $zipFile "config archive" 60)) {
-        Write-Host "  ERROR: All download sources failed" -ForegroundColor Red
+    try {
+        Invoke-WebRequest -Uri $directUrl -UserAgent $Script:UserAgent -OutFile $zipFile -TimeoutSec 60
+    } catch {
+        Write-Host "  ERROR: Download failed - $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
     # Verify ZIP
