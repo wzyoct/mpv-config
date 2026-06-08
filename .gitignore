@@ -1,0 +1,24 @@
+﻿# Large binaries
+mpv.exe
+mpv.com
+ffmpeg.exe
+yt-dlp.exe
+youtube-dl.exe
+d3dcompiler_43.dll
+
+# Archives
+*.7z
+*.zip
+
+# Generated
+portable_config\.config-version
+portable_config.backup.*/
+mpv-config-temp/
+
+# System
+Thumbs.db
+Desktop.ini
+
+# Fonts and binaries in config
+portable_config/fonts/
+portable_config/scripts/uosc/bin/
