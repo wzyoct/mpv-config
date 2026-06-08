@@ -6,9 +6,6 @@ yt-dlp.exe
 youtube-dl.exe
 d3dcompiler_43.dll
 
-# Archives
-*.7z
-*.zip
 
 # Not to sync
 installer/
@@ -20,10 +17,6 @@ updater.ps1
 mpbindings.png
 fonts.conf
 
-# Generated
-portable_config\.config-version
-portable_config.backup.*/
-mpv-config-temp/
 
 # System
 Thumbs.db
@@ -32,3 +25,4 @@ Desktop.ini
 # Generated config assets
 portable_config/fonts/
 portable_config/scripts/uosc/bin/
+
