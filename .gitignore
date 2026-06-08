@@ -10,6 +10,16 @@ d3dcompiler_43.dll
 *.7z
 *.zip
 
+# Not to sync
+installer/
+mpv/
+doc/
+mpv-install.bat
+mpv-uninstall.bat
+updater.ps1
+mpbindings.png
+fonts.conf
+
 # Generated
 portable_config\.config-version
 portable_config.backup.*/
@@ -19,6 +29,6 @@ mpv-config-temp/
 Thumbs.db
 Desktop.ini
 
-# Fonts and binaries in config
+# Generated config assets
 portable_config/fonts/
 portable_config/scripts/uosc/bin/
