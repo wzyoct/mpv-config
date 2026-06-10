@@ -1,6 +1,12 @@
-﻿# Only exclude the binary ziggy helpers
+﻿# uosc 二进制文件
 scripts/uosc/bin/
 
-# System
+# 字体文件（从 uosc release 手动下载，不纳入仓库）
+fonts/
+
+# 着色器缓存（运行时自动生成）
+cache/
+
+# 系统临时文件
 Thumbs.db
 Desktop.ini
