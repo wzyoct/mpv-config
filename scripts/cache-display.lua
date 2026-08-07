@@ -1,7 +1,7 @@
 ﻿-- cache-display.lua
 -- 将北京时间 / 缓冲可观看时间（倍速折算）/ 网速 注入 uosc 顶栏副标题
 
-mp.add_periodic_timer(0.5, function()
+mp.add_periodic_timer(1, function()
     local cache_sec = mp.get_property_number("demuxer-cache-duration", 0)
     local speed_bytes = mp.get_property_number("cache-speed", 0)
     local speed = mp.get_property_number("speed", 1)

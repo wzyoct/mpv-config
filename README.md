@@ -1,6 +1,67 @@
-﻿# mpv-config
+# mpv-config
 
 mpv Windows 便携版配置文件，搭配 [uosc](https://github.com/tomasklaen/uosc) 现代 UI 脚本。
+
+## 快速开始
+
+### 1. 下载 mpv
+
+从 [shinchiro/mpv-winbuild-cmake/releases](https://github.com/shinchiro/mpv-winbuild-cmake/releases) 下载最新构建：
+
+| 文件名 | 说明 |
+|--------|------|
+| `mpv-x86_64-*.7z` | 标准 x86_64 版本，兼容所有 64 位 CPU |
+| `mpv-x86_64-v3-*.7z` | x86_64 v3 版本（需 CPU 支持 AVX2），性能更好 |
+
+> 💡 不确定选哪个？先试 `mpv-x86_64-*.7z`，稳定通用。
+
+### 2. 解压 mpv
+
+将下载的 `.7z` 文件解压到任意目录，例如 `D:\mpv\`。
+
+解压后目录结构应如下：
+
+```
+D:\mpv\
+├── mpv.exe
+├── ...
+```
+
+### 3. 导入本配置
+
+在解压目录下克隆本仓库为 `portable_config`：
+
+```bash
+cd D:\mpv\
+git clone https://github.com/wzyoct/mpv-config.git portable_config
+```
+
+### 4. 下载 uosc 字体（必须）
+
+> ⚠️ **如果 UI 图标显示为英文文字（如 `play_arrow`、`pause`）而非图标，说明字体缺失。**
+
+uosc 使用 `MaterialIconsRound-Regular` 字体渲染图标。首次 clone 后必须手动下载：
+
+```bash
+# 在 portable_config/ 目录下执行
+curl -L -o uosc-fonts.zip "https://github.com/tomasklaen/uosc/releases/latest/download/uosc.zip"
+unzip -j uosc-fonts.zip "uosc/fonts/*" -d fonts/ && rm uosc-fonts.zip
+```
+
+或手动操作：
+
+1. 打开 https://github.com/tomasklaen/uosc/releases/latest
+2. 下载 `uosc.zip`
+3. 解压其中的 `uosc/fonts/` 目录到 `portable_config/fonts/`
+4. 重启 mpv，图标应恢复正常
+
+> 📌 **升级 uosc 脚本后，也需同步更新 fonts/ 目录**。
+
+### 5. 启动
+
+双击 `mpv.exe` 即可使用。
+
+---
 
 ## 文件结构
 
@@ -15,46 +76,8 @@ portable_config/
 │   ├── uosc/           # uosc 现代 UI（main.lua + elements/ + lib/ + intl/）
 │   ├── stats.lua       # 内置统计页（Shift+I）
 │   └── cache-display.lua  # 缓冲进度显示
-└── fonts/              # uosc 图标字体（需手动下载，见下方说明）
+└── fonts/              # uosc 图标字体（需手动下载，见上方说明）
 ```
-
-## 安装
-
-```bash
-# 克隆到 mpv 便携版目录
-cd mpv/
-git clone git@github.com:wzyoct/mpv-config.git portable_config
-```
-
-如果已有本地仓库，直接 `git pull` 更新：
-
-```bash
-cd mpv/portable_config/
-git pull
-```
-
-## 字体（必须安装）
-
-> ⚠️ **如果 UI 图标显示为英文文字（如 `play_arrow`、`pause`）而非图标，说明字体缺失。**
-
-uosc 使用 `MaterialIconsRound-Regular` 字体渲染图标。首次 clone 后必须手动下载，否则所有按钮/菜单图标都会显示为英文名称。
-
-```bash
-# 快速下载（在 portable_config/ 目录下执行）
-curl -L -o uosc-fonts.zip "https://github.com/tomasklaen/uosc/releases/latest/download/uosc.zip"
-# 解压 fonts/ 目录到当前目录
-unzip -j uosc-fonts.zip "uosc/fonts/*" -d fonts/ && rm uosc-fonts.zip
-```
-
-或手动操作：
-
-1. 打开 https://github.com/tomasklaen/uosc/releases/latest
-2. 下载 `uosc.zip`
-3. 解压其中的 `uosc/fonts/` 目录到 `portable_config/fonts/`
-   - 保证 `fonts/MaterialIconsRound-Regular.ttf` 这个路径存在
-4. 重启 mpv，图标应恢复正常
-
-> 📌 **升级 uosc 脚本后，也需同步更新 fonts/ 目录**，否则可能因字体版本不匹配导致图标异常。
 
 ## 配置说明
 
@@ -97,7 +120,7 @@ unzip -j uosc-fonts.zip "uosc/fonts/*" -d fonts/ && rm uosc-fonts.zip
 | `Alt+[` / `Alt+]` | 字幕缩放 ±0.1 |
 | `Ctrl+V` | 从剪贴板加载链接播放 |
 | `Shift+I` | 切换统计信息页面 |
-| `` ` `` | 打开控制台 |
+| \`\`\` | 打开控制台 |
 
 ### profiles.conf
 
@@ -105,7 +128,7 @@ unzip -j uosc-fonts.zip "uosc/fonts/*" -d fonts/ && rm uosc-fonts.zip
 
 | Profile | 缩放算法 | 适用 |
 |---------|---------|------|
-| `powerful`（默认） | ewa_lanczossharp + mitchell + 线性光 | 高配机 |
+| `powerful`（默认） | ewa_lanczossharp + mitchell + 去色带 | 中高配机 |
 | `lite` | bilinear + fast 内置 profile | 低配机 |
 
 > 低配机用户：编辑 `profiles.conf` 末尾 `[default]`，将 `profile=powerful` 改为 `profile=lite`。
@@ -117,6 +140,7 @@ unzip -j uosc-fonts.zip "uosc/fonts/*" -d fonts/ && rm uosc-fonts.zip
 | `stream` | 播放 .m3u / .m3u8 直播流 | 缓冲降为 5MB |
 | `16k-downscale` | 视频分辨率超过 8K（8640×4320） | 限制到 16K 以内 |
 | `8k-downscale` | 视频分辨率超过 4K（8192×4320） | 限制到 8K 以内 |
+| `HDR-direct` | 检测到 HDR PQ 内容 | 信号直出，显示器处理色调映射 |
 
 ### uosc.conf
 
@@ -129,6 +153,25 @@ unzip -j uosc-fonts.zip "uosc/fonts/*" -d fonts/ && rm uosc-fonts.zip
 
 ## 系统要求
 
-- mpv ≥ 0.37.0
+- [shinchiro mpv-winbuild-cmake](https://github.com/shinchiro/mpv-winbuild-cmake/releases) 最新构建
 - Windows 10 / 11（64 位）
 - uosc 最新 release 版本
+
+## 更新日志
+
+### 2026-08-07
+
+**profiles.conf**
+
+- 修复条件 profile（`stream`、`16k-downscale`、`8k-downscale`）缺少 `profile-restore=copy`，切回普通视频后缓冲设置残留的 bug
+- `powerful` profile 新增 `deband=yes` + `deband-iterations=2`，改善渐变/暗场色带
+- `lite` profile 显式关闭 `deband`
+
+**cache-display.lua**
+
+- 轮询间隔从 0.5s 调整为 1s，减少无意义计算
+
+**README.md**
+
+- 新增完整安装说明（基于 shinchiro mpv-winbuild-cmake）
+- 新增更新日志章节
