@@ -1,8 +1,5 @@
-﻿# uosc 二进制文件
+﻿# uosc 二进制文件（跨平台，体积大，字幕下载功能可选）
 scripts/uosc/bin/
-
-# 字体文件（从 uosc release 手动下载，不纳入仓库）
-fonts/
 
 # 着色器缓存（运行时自动生成）
 cache/

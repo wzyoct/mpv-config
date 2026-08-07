@@ -33,26 +33,18 @@ cd mpv/portable_config/
 git pull
 ```
 
-## 字体（必须安装）
+## 字体
 
 > ⚠️ **如果 UI 图标显示为英文文字（如 `play_arrow`、`pause`）而非图标，说明字体缺失。**
 
-uosc 使用 `MaterialIconsRound-Regular` 字体渲染图标。首次 clone 后必须手动下载，否则所有按钮/菜单图标都会显示为英文名称。
+uosc 使用 `MaterialIconsRound-Regular` 字体渲染图标。**字体已包含在仓库中**，克隆后无需额外操作。
 
-```bash
-# 快速下载（在 portable_config/ 目录下执行）
-curl -L -o uosc-fonts.zip "https://github.com/tomasklaen/uosc/releases/latest/download/uosc.zip"
-# 解压 fonts/ 目录到当前目录
-unzip -j uosc-fonts.zip "uosc/fonts/*" -d fonts/ && rm uosc-fonts.zip
 ```
-
-或手动操作：
-
-1. 打开 https://github.com/tomasklaen/uosc/releases/latest
-2. 下载 `uosc.zip`
-3. 解压其中的 `uosc/fonts/` 目录到 `portable_config/fonts/`
-   - 保证 `fonts/MaterialIconsRound-Regular.ttf` 这个路径存在
-4. 重启 mpv，图标应恢复正常
+fonts/
+├── LXGWWenKai-Regular.ttf      # 霞鹜文楷（中文字体）
+├── uosc_icons.otf              # uosc 图标字体
+└── uosc_textures.ttf           # uosc 纹理字体
+```
 
 > 📌 **升级 uosc 脚本后，也需同步更新 fonts/ 目录**，否则可能因字体版本不匹配导致图标异常。
 
