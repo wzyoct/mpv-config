@@ -8,7 +8,7 @@ mpv Windows 便携版配置文件，搭配 [uosc](https://github.com/tomasklaen/
 portable_config/
 ├── mpv.conf            # 主配置（渲染、色彩、窗口、字幕、音轨、网络缓冲）
 ├── input.conf          # 快捷键绑定（禁用默认键位，仅此处定义的生效）
-├── profiles.conf       # 条件 profile（性能分级 + 文件类型自动切换）
+├── profiles.conf       # 渲染性能 profile（高配 / 低配）
 ├── script-opts/
 │   └── uosc.conf       # uosc 脚本 UI 参数
 ├── scripts/
@@ -102,14 +102,6 @@ fonts/
 
 > 低配机用户：编辑 `profiles.conf` 末尾 `[default]`，将 `profile=powerful` 改为 `profile=lite`。
 
-#### 自动触发
-
-| Profile | 条件 | 效果 |
-|---------|------|------|
-| `stream` | 播放 .m3u / .m3u8 直播流 | 缓冲降为 5MB |
-| `16k-downscale` | 视频分辨率超过 8K（8640×4320） | 限制到 16K 以内 |
-| `8k-downscale` | 视频分辨率超过 4K（8192×4320） | 限制到 8K 以内 |
-
 ### uosc.conf
 
 - 时间线：条形样式，展开 40px
@@ -118,6 +110,14 @@ fonts/
 - 菜单语言：优先跟随字幕语言，回退简中
 - 章节高亮：片头片尾（透明绿）、广告（透明红）
 - 字幕下载：保存到 `~~/subtitles`
+
+## 更新日志
+
+### 2026-08-11
+
+- 移除仅匹配 HLS `.m3u` / `.m3u8` 地址的直播 profile，网络缓存统一由 `mpv.conf` 管理。
+- 移除 8K、16K 视频的自动窗口尺寸限制。
+- 更新 `profiles.conf` 的文档说明，保留高配与低配两种渲染性能 profile。
 
 ## 系统要求
 
