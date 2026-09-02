@@ -174,6 +174,7 @@ local config_defaults = {
 }
 config = {
 	version = uosc_version,
+	-- Local distribution change (2026-09-02): do not ship the upstream default API key.
 	open_subtitles_api_key = '',
 	open_subtitles_agent = 'uosc v' .. uosc_version,
 	-- sets max rendering frequency in case the
