@@ -16,6 +16,16 @@
 
 4. 从 [Jellyfin MPV Player Releases](https://github.com/wzyoct/jellyfin-mpv-player/releases) 下载播放器，按播放器 README 配置 MPV 的完整路径。
 
+便携目录需要保持以下相对位置：
+
+```text
+mpv/
+├─ yt-dlp.exe
+└─ portable_config/
+```
+
+`mpv.conf` 会从配置目录的上一级查找 `yt-dlp.exe`。如果单独移动 `portable_config/`，请同时保持这个相对位置，否则网络视频解析功能可能无法使用。
+
 也可以使用 HTTPS 克隆源码进行开发：
 
 ```powershell
@@ -39,6 +49,8 @@ portable_config/
     ├── uosc_icons.otf
     └── uosc_textures.ttf
 ```
+
+uosc 的 `scripts/uosc/bin/ziggy-windows.exe` 是字幕搜索/下载等功能使用的可选辅助程序。该二进制文件被 Git 忽略，不属于源码仓库的必需文件；需要完整 uosc 字幕功能时，应在发布 ZIP 中额外包含 Windows 版本的 `scripts/uosc/bin/ziggy-windows.exe`。不使用这些功能时可以省略。
 
 配置要求 Windows 10/11（64 位）和 MPV 0.41 或更高版本。`mpv.conf` 中的大容量网络缓存是针对网络较差、主机性能较高的环境设置的；如需调整，请先理解对应 MPV 选项的影响。
 播放器目录中的 `mpv.exe`、`ffmpeg.exe` 和 `yt-dlp.exe` 属于运行环境，不需要放进这个配置仓库。
