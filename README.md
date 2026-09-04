@@ -41,6 +41,8 @@ portable_config/
 ```
 
 配置要求 Windows 10/11（64 位）和 MPV 0.41 或更高版本。`mpv.conf` 中的大容量网络缓存是针对网络较差、主机性能较高的环境设置的；如需调整，请先理解对应 MPV 选项的影响。
+播放器目录中的 `mpv.exe`、`ffmpeg.exe` 和 `yt-dlp.exe` 属于运行环境，不需要放进这个配置仓库。
+`watch_later/`、`cache/`、`screenshots/` 和 `subtitles/` 是运行时数据，已由 `.gitignore` 排除。
 
 ## 许可
 

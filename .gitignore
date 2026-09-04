@@ -4,6 +4,12 @@ scripts/uosc/bin/
 # 着色器缓存（运行时自动生成）
 cache/
 
+# 播放状态与运行时生成的媒体文件
+watch_later/
+screenshots/
+subtitles/
+*.log
+
 # 系统临时文件
 Thumbs.db
 Desktop.ini
