@@ -92,6 +92,78 @@ portable_config/
 播放器目录中的 `mpv.exe`、`ffmpeg.exe` 和 `yt-dlp.exe` 属于运行环境，不需要放进这个配置仓库。
 `watch_later/`、`cache/`、`screenshots/` 和 `subtitles/` 是运行时数据，已由 `.gitignore` 排除。
 
+## 项目组成
+
+这个项目不只是三份配置文件，而是一套可运行的 MPV 便携配置。各部分的职责如下：
+
+### 1. 配置
+
+- `mpv.conf` 是主入口，负责渲染、硬件解码、HDR 直通、窗口、字幕、音轨优先级、网络播放、截图和脚本选项。
+- `profiles.conf` 由 `mpv.conf` 最后 `include`，负责按机器性能和视频条件切换参数：
+  - `powerful`：高质量缩放，适合性能较强的机器。
+  - `lite`：双线性缩放并继承 MPV 的 `fast` profile，适合低配机器。
+  - `default`：当前默认启用 `powerful`；换机器时可改成 `lite`。
+  - `HDR-direct`：检测到 PQ HDR 视频时启用 HDR 直通，并将峰值设为 10000，尽量交由显示器处理。
+- `mpv.conf` 关闭 MPV 内置 OSC 和 OSD 进度条，由 UOSC 接管界面；同时关闭默认快捷键，只保留 `input.conf` 中明确声明的按键。
+- 网络缓存是本配置的固定策略：`demuxer-max-bytes=2048MiB`、`demuxer-max-back-bytes=256MiB`、`cache-pause=no`。它针对网络较差且主机性能较高的环境，不应在普通整理或审查中擅自调整。
+
+### 2. 快捷键
+
+快捷键集中在 `input.conf`。音量、速度和跳转操作都通过 `script-message-to uosc flash-elements ...` 同步刷新 UOSC 的提示动画。
+
+| 按键 | 行为 |
+| --- | --- |
+| `Space` | 暂停/继续，并触发 UOSC 暂停动画 |
+| `Enter`、双击鼠标左键 | 切换全屏 |
+| `Esc` | 退出全屏 |
+| 鼠标右键 | 打开带背景模糊的 UOSC 主菜单 |
+| `Ctrl+V` | 从剪贴板加载链接或路径播放 |
+| `Up` / `Down` | 音量增加/减少 5 |
+| `[` / `]` | 在 `1x`、`1.25x`、`1.5x`、`1.75x`、`2x`、`2.5x`、`3x` 之间减速/加速循环 |
+| `Left` / `Right` | 后退/前进 5 秒 |
+| `Alt+[` / `Alt+]` | 字幕缩小/放大 0.1 |
+| `` ` `` | 打开 MPV 控制台 |
+| `Shift+I` | 打开/关闭统计页 |
+
+UOSC 菜单内部还提供文件、播放列表、音轨、字幕、章节、流媒体质量和音频设备等操作；这些属于 UOSC 的菜单快捷键，不在 `input.conf` 中重复维护。
+
+### 3. UOSC 播放界面
+
+- `scripts/uosc/` 是随仓库分发的 UOSC 5.13.0 完整脚本，MPV 会自动加载 `scripts/` 下的 Lua 脚本。
+- `script-opts/uosc.conf` 是 UOSC 的本地外观和行为配置：时间线、控制栏、音量条、速度步长、菜单、顶部标题栏、文件类型、字幕目录和章节标记等都在这里集中定义。
+- 当前控制栏包含菜单、字幕、音频、视频、版本/章节相关控件、流媒体质量、速度、上一项、播放列表、下一项和全屏；可见控件会根据当前媒体能力动态显示。
+- UOSC 顶栏副标题读取 `${user-data/cache-display/info}`，因此会显示 `cache-display.lua` 提供的北京时间、按倍速折算后的可观看缓存时长和当前网速。
+- `fonts/uosc_icons.otf` 和 `fonts/uosc_textures.ttf` 提供 UOSC 图标与纹理；`fonts/LXGWWenKai-Regular.ttf` 用于中文字幕。
+- `scripts/uosc/bin/ziggy-windows.exe` 是 Windows 字幕搜索/下载辅助程序。缺失或 SHA256 不一致时，字幕下载功能不能视为完整恢复。
+
+### 4. 辅助脚本与运行依赖
+
+- `scripts/stats.lua` 提供统计页，按 `1`、`2`、`3`、`0` 切换普通信息、帧时序、缓存统计和性能信息；通过 `Shift+I` 显示或隐藏。
+- `scripts/cache-display.lua` 每 0.5 秒计算缓存可观看时长和网速，并将结果交给 UOSC 顶栏显示。
+- `yt-dlp.exe` 不在仓库内，由 `mpv.conf` 从 `portable_config/` 的上一级目录查找，用于网络视频解析。
+- `mpv.exe` 和 `ffmpeg.exe` 同样属于 MPV 运行环境，不属于本配置仓库。
+
+### 5. 运行时数据与许可
+
+- `cache/`、`watch_later/`、`screenshots/` 和 `subtitles/` 是本机运行数据，不应作为跨设备配置同步；恢复配置时应保留它们，但不要求从 GitHub 下载。
+- UOSC、mpv-stats、UOSC 字体和霞鹜文楷的许可证与来源见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) 及 `LICENSES/`。本仓库自己的配置、`cache-display.lua` 和文档使用 MIT License。
+
+## 启动后的工作关系
+
+MPV 启动时先读取 `mpv.conf`，再加载 `profiles.conf` 中的 profile 和 `script-opts/uosc.conf`。随后自动加载 UOSC、统计脚本和缓存信息脚本：
+
+```text
+mpv.conf
+├─ include profiles.conf
+├─ 关闭内置 OSC，启用硬件解码/HDR/字幕/缓存等基础策略
+├─ 加载 scripts/uosc + script-opts/uosc.conf
+├─ 加载 scripts/stats.lua
+└─ 加载 scripts/cache-display.lua
+   └─ user-data/cache-display/info -> UOSC 顶栏副标题
+```
+
+修改时通常按这个边界处理：播放基础行为改 `mpv.conf`，性能档位改 `profiles.conf`，按键改 `input.conf`，界面外观和菜单改 `script-opts/uosc.conf`，顶栏缓存信息改 `scripts/cache-display.lua`。不要直接改 UOSC 内部 Lua，除非确实是在维护第三方组件。
+
 ## 许可
 
 本仓库自有配置、`cache-display.lua` 和文档使用 [MIT License](LICENSE)。仓库同时分发的第三方内容及其完整许可文本见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) 和 `LICENSES/`：
