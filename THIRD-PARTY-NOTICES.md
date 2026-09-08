@@ -7,8 +7,10 @@
 - 来源：[tomasklaen/uosc](https://github.com/tomasklaen/uosc)
 - 版本：5.13.0（`scripts/uosc/main.lua` 中记录的版本）
 - 内容：`scripts/uosc/`、`fonts/uosc_icons.otf`、`fonts/uosc_textures.ttf`
+- Windows 辅助程序：`scripts/uosc/bin/ziggy-windows.exe`，用于字幕搜索和下载
 - 许可：GNU Lesser General Public License 2.1，完整文本见 [`LICENSES/LGPL-2.1-uosc.txt`](LICENSES/LGPL-2.1-uosc.txt)
 - 本地发行改动：2026-09-02 清空 uosc 默认的 OpenSubtitles API key，不分发该 key。
+- Windows 辅助程序 SHA256：`AB76A5A059EF0AEF0F54DC317E31EAE25CC5B7E3840F81CBF98B1AB07A96F636`
 
 ## mpv-stats
 
