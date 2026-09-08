@@ -32,6 +32,30 @@ mpv/
 git clone https://github.com/wzyoct/mpv-config.git portable_config
 ```
 
+## 跨设备恢复配置
+
+在其他设备上，如果已经下载并解压了 MPV，可以在 `portable_config` 配置目录中直接把下面的提示词交给 Codex：
+
+```text
+请把当前目录恢复为 GitHub 仓库 https://github.com/wzyoct/mpv-config.git 的最新 master 内容，并以 GitHub 为唯一配置源。
+
+请先执行以下检查：
+1. 确认当前目录就是 portable_config 配置目录，不要在里面再创建 portable_config/portable_config 嵌套目录。
+2. 读取当前目录的 AGENTS.md 和 README.md，遵守其中的项目规则。
+3. 在临时目录通过 HTTPS 克隆或获取上述仓库，先核对远程 master 的提交和文件清单，再执行替换。
+
+替换要求：
+- 完整同步 GitHub 中已跟踪的配置、脚本、字体、许可证和文档，不要只复制 mpv.conf 或 UOSC 的部分文件。
+- 以远程仓库为准，清理仓库管理范围内已经被远程删除的旧配置文件；但不要删除 mpv.exe、ffmpeg.exe、yt-dlp.exe 或其他播放器程序。
+- 保留 cache/、watch_later/、screenshots/、subtitles/ 等本地运行时目录及其中内容。
+- 不要把本地未跟踪的 scripts/uosc/bin/ziggy-windows.exe 擅自提交到 GitHub；如果需要 UOSC 的字幕搜索/下载功能，请检查它是否存在，并明确报告缺失。
+- 不要修改或推送 GitHub，除非我另外明确要求。
+
+完成后请报告：远程提交号、实际替换的文件范围、保留的本地运行时内容，以及 UOSC 字幕辅助程序是否存在。若发现错误，保留错误信息并停止，不要用默认值掩盖问题。
+```
+
+说明：GitHub 源码仓库包含完整的 UOSC Lua 文件，但 `scripts/uosc/bin/` 被 `.gitignore` 排除。普通 UOSC 界面不依赖其中的二进制文件；字幕搜索/下载需要另外准备 Windows 版 `ziggy-windows.exe`。如果需要开箱即用的发布包，应使用 Releases 中的 ZIP，并确认 ZIP 额外包含该文件。
+
 ## 文件结构
 
 ```text
