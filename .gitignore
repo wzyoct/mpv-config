@@ -1,7 +1,6 @@
 ﻿# uosc 二进制文件（跨平台，体积大，字幕下载功能可选）
 scripts/uosc/bin/*
 !scripts/uosc/bin/
-!scripts/uosc/bin/ziggy-windows.exe
 
 # 着色器缓存（运行时自动生成）
 cache/
