@@ -97,7 +97,7 @@ portable_config/
 ## 配置说明
 
 - `mpv.conf`：渲染、硬件解码、HDR、窗口、字幕、音轨优先级、网络播放、截图和脚本选项。
-- `profiles.conf`：按机器性能和视频条件切换 `powerful`、`lite`、`default`、`HDR-direct` 等 profile。
+- `profiles.conf`：按机器性能切换 `powerful`、`lite` 和 `default` profile；HDR 输出由 `mpv.conf` 根据 Windows 当前显示状态自动选择。
 - `input.conf`：快捷键。UOSC 的菜单操作由 UOSC 自己管理。
 - `script-opts/uosc.conf`：UOSC 的外观和行为配置。
 - `scripts/stats.lua`：统计页，通过 `Shift+I` 显示或隐藏。
