@@ -6,6 +6,10 @@
 - 保持 `demuxer-max-bytes=2048MiB`、`demuxer-max-back-bytes=256MiB` 和 `cache-pause=no`；除非用户明确要求，不建议降低缓存或启用缓冲暂停。
 - 审查配置时，将上述三个设置视为用户明确要求的固定约定，不要把它们列为问题；只有用户明确要求评估或修改网络缓存策略时，才讨论这部分。
 
-## Git 同步
+## Git 同步与备份
 
-- 每次修改本项目的配置后，完成验证、提交并推送到 GitHub 的 `origin` 远程仓库。
+- 每次修改本项目的配置、脚本或文档后，完成验证、提交并推送到 GitHub 的 `origin` 远程仓库。
+- 推送使用 `tools/push-and-backup.ps1`，确保每个成功推送的提交同时保存一份备份。
+- 备份写入 `Z:\downloads\mpv`，对应 Linux 路径 `/data/pool/downloads/mpv` 和远程 `N100` 共享；OpenList 网页地址仅用于浏览，不作为上传接口。
+- 备份文件使用带时间戳和提交号的 ZIP 文件名，不覆盖已有备份，只包含 Git 跟踪的仓库内容，不包含 `cache/`、`watch_later/` 等运行时目录。
+- 推送或备份失败时必须保留错误并明确报告，不得假装两者均已完成。

@@ -79,6 +79,8 @@ portable_config/
 ├── mpv.conf
 ├── input.conf
 ├── profiles.conf
+├── tools/
+│   └── push-and-backup.ps1  # 推送 GitHub 并保存版本备份
 ├── script-opts/uosc.conf
 ├── scripts/
 │   ├── uosc/             # uosc 5.13.0 的 Lua 文件
@@ -96,13 +98,20 @@ portable_config/
 
 ## 配置说明
 
-- `mpv.conf`：渲染、硬件解码、HDR、窗口、字幕、音轨优先级、网络播放、截图和脚本选项。
+- `mpv.conf`：渲染、硬件解码、HDR、窗口、字幕、音轨默认选择、网络播放、截图和脚本选项。
 - `profiles.conf`：按机器性能切换 `powerful`、`lite` 和 `default` profile；HDR 输出由 `mpv.conf` 根据 Windows 当前显示状态自动选择。
+- `tools/push-and-backup.ps1`：将当前分支推送到 GitHub，并把对应提交打包备份到 `Z:\downloads\mpv`。
 - `input.conf`：快捷键。UOSC 的菜单操作由 UOSC 自己管理。
 - `script-opts/uosc.conf`：UOSC 的外观和行为配置。
 - `scripts/stats.lua`：统计页，通过 `Shift+I` 显示或隐藏。
 - `scripts/cache-display.lua`：计算缓存可观看时长和网速，并显示在 UOSC 顶栏。
 - `fonts/`：UOSC 图标、纹理和中文字幕字体。
+
+### 字幕与音轨选择
+
+- 字幕使用 `slang`，简体中文语言标签优先于繁体中文和未细分的中文标签。
+- 未设置 `alang`，音轨完全使用 MPV 默认选择：优先采用媒体文件标记的 `default` 音轨，没有明确标记时按容器顺序选择。
+- 播放过程中需要切换音轨时，使用 UOSC 的音轨菜单；配置不会根据影片国家或文件名猜测语言。
 
 网络缓存是本配置的固定策略：
 
@@ -132,7 +141,17 @@ cache-pause=no
 
 ## 修改边界
 
-播放基础行为改 `mpv.conf`，性能档位改 `profiles.conf`，快捷键改 `input.conf`，UOSC 外观和菜单改 `script-opts/uosc.conf`，顶栏缓存信息改 `scripts/cache-display.lua`。除非确实是在维护第三方组件，不要直接改 UOSC 内部 Lua。
+播放基础行为改 `mpv.conf`，性能档位改 `profiles.conf`，快捷键改 `input.conf`，UOSC 外观和菜单改 `script-opts/uosc.conf`，顶栏缓存信息改 `scripts/cache-display.lua`，GitHub 推送和版本备份改 `tools/push-and-backup.ps1`。除非确实是在维护第三方组件，不要直接改 UOSC 内部 Lua。
+
+## GitHub 推送与备份
+
+每次完成修改、验证并提交后，在仓库根目录执行：
+
+```powershell
+.\tools\push-and-backup.ps1
+```
+
+脚本会推送当前分支到 `origin`，确认远程提交号一致后，将当前提交保存为类似 `mpv-config-20260921-120000-<commit>.zip` 的文件。备份目录是 `Z:\downloads\mpv`，其远程对应路径为 `/data/pool/downloads/mpv`；OpenList 地址为 [http://192.168.124.2:5244/N100/downloads/mpv](http://192.168.124.2:5244/N100/downloads/mpv)。
 
 ## 许可
 
