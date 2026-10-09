@@ -20,6 +20,6 @@
 
 ## mpv 项目约定
 
-- `mpv.conf` 使用 `cache=yes` 和 `cache-pause=no`，前向与后向缓存容量使用 mpv 默认值，不显式设置 `demuxer-max-bytes` 和 `demuxer-max-back-bytes`；仅在用户明确要求评估或修改网络缓存策略时才讨论或调整。
+- `mpv.conf` 使用 `cache=yes` 和 `cache-pause=no`，显式设置 `demuxer-max-bytes=150MiB` 和 `demuxer-max-back-bytes=50MiB`，容量与 2026-10-09 安装的 mpv 默认值一致，不随播放器更新自动变化；仅在用户明确要求评估或修改网络缓存策略时才讨论或调整。
 - 推送后的备份写入 `Z:\downloads\mpv`（Linux 路径 `/data/pool/downloads/mpv`，远程 `N100` 共享）。OpenList 网页仅用于浏览，不作为上传接口。
 - 备份使用带时间戳和提交号的 ZIP 文件名，不覆盖已有文件；仅包含 Git 跟踪内容，不包含 `cache/`、`watch_later/` 等运行时目录。
