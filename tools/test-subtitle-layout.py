@@ -40,11 +40,11 @@ def run(args):
                           creationflags=subprocess.CREATE_NO_WINDOW)
 
 
-def prepare(source, scale=1.5, stream=-1, media=None):
+def prepare(source, scale=1.5, stream=-1, media=None, srt=False, plain=None):
     request = WORK / f'request-{uuid.uuid4().hex}.json'
     request.write_text(json.dumps(dict(source=str(source), media=str(media) if media else None,
         stream=stream, scale=scale, font='LXGW WenKai', fonts=str(ROOT / 'fonts'),
-        ffmpeg=str(FFMPEG), cache=str(WORK / 'cache'))), encoding='utf-8')
+        ffmpeg=str(FFMPEG), cache=str(WORK / 'cache'), srt=srt, plain=plain)), encoding='utf-8')
     result = run(['powershell.exe', '-NoProfile', '-NonInteractive', '-File',
                   ROOT / 'tools' / 'subtitle-layout.ps1', '-Request', request])
     request.unlink()
@@ -147,8 +147,8 @@ def selftest():
     assert report['changed'] == 4 and report['skipped'] == 2 and report['pairs'] == 1, report
     output = Path(report['path']).read_text(encoding='utf-8')
     events = [x.split(',', 9) for x in output.splitlines() if x.startswith('Dialogue:')]
-    assert '\\N' in events[0][9] and '\\N' in events[1][9]
-    assert int(events[0][7]) > int(events[1][7]) + 150, events[:2]
+    assert '\\N' in events[0][9]
+    assert int(events[0][7]) > int(events[1][7]) + 70, events[:2]
     assert events[2][7] == '60', events[2]
     assert '\\N' in events[3][9] and '\\q2' not in events[3][9]
     assert events[4][9] == r'{\pos(960,100)}定位翻译保持原样'
@@ -240,7 +240,8 @@ def selftest():
         srt = WORK / 'fixture.srt'
         srt.write_text('1\n00:00:00,000 --> 00:00:03,000\n普通 SRT 字幕保持原生样式和换行\n', encoding='utf-8')
         resumed.cmd('sub-add', str(srt), 'select')
-        resumed.wait(lambda: resumed.get('user-data/subtitle-layout/status') == 'native')
+        resumed.wait(lambda: resumed.get('user-data/subtitle-layout/status') == 'native' and
+                     (resumed.get('user-data/subtitle-layout/report') or {}).get('native') is True)
         assert resumed.get('sub-ass-override') == 'scale'
         assert abs(resumed.get('sub-delay') - .35) < .001
         resumed.screenshot('srt-native', 1)
@@ -312,7 +313,156 @@ def realtest():
     print('PASS: real ASS/PGS track selection and independent scale; screenshots in', WORK)
 
 
+def ass_rows(path):
+    styles, rows = {}, []
+    for line in Path(path).read_text(encoding='utf-8-sig').splitlines():
+        if line.startswith('Style:'):
+            fields = line[6:].lstrip().split(',')
+            styles[fields[0]] = fields
+        if line.startswith('Dialogue:'):
+            fields = line[9:].lstrip().split(',', 9)
+            rows.append(fields)
+    return styles, rows
+
+
+PLAIN = dict(PlayResX=1280, Fontname='LXGW WenKai', Fontsize=38, MarginL=19, MarginR=19,
+             MarginV=34, Outline=2, Shadow=1, Spacing=0, PrimaryColour='&H00FFFFFF',
+             OutlineColour='&H00000000', BackColour='&H00000000', Bold=0, Italic=0)
+
+
+def bilingualtest():
+    def size(styles, row):
+        return float(styles[row[3]][2])
+
+    source = WORK / 'bilingual-separate.ass'
+    baseline = ASS.splitlines()
+    for n, line in enumerate(baseline):
+        if line.startswith('Style: JP,'):
+            fields = line[7:].split(',')
+            fields[13], fields[16], fields[17] = '1.25', '2.5', '1.5'
+            baseline[n] = 'Style: ' + ','.join(fields)
+    source.write_text('\n'.join(baseline) + '\nDialogue: 0,0:00:06.00,0:00:07.00,JP,,0,0,0,,魔術師\n', encoding='utf-8')
+    for scale in (1, 1.5, 2):
+        report = prepare(source, scale)
+        styles, rows = ass_rows(report['path'])
+        assert report['bilingual'] and report['uncertain'] == 0, report
+        assert size(styles, rows[0]) == 72 * scale
+        assert size(styles, rows[1]) == size(styles, rows[-1]) == 65, 'foreign font changed'
+        assert [float(styles[rows[1][3]][i]) for i in (13, 16, 17)] == [1.25, 2.5, 1.5]
+        assert size(styles, rows[2]) == 72 * scale, 'Chinese-only moment lost its scale'
+
+    mono = WORK / 'foreign-only.ass'
+    mono.write_text('\n'.join(line for line in ASS.splitlines() if not line.startswith('Dialogue:') or ',JP,' in line), encoding='utf-8')
+    report = prepare(mono, 2)
+    styles, rows = ass_rows(report['path'])
+    assert not report['bilingual'] and size(styles, rows[0]) == 130, 'monolingual scaling changed'
+
+    english = WORK / 'bilingual-english.ass'
+    english.write_text(ASS.replace('Style: JP,', 'Style: EN,').replace(',JP,', ',EN,').replace(
+        '字幕の改行と字幕の間隔を確認する台詞です。', 'This English reference line stays at its original size.'), encoding='utf-8')
+    styles, rows = ass_rows(prepare(english, 2)['path'])
+    assert size(styles, rows[0]) == 144 and size(styles, rows[1]) == 65
+
+    shared = WORK / 'bilingual-shared.ass'
+    header = ASS.split('[Events]')[0] + '[Events]\n' + ASS.split('[Events]\n')[1].splitlines()[0] + '\n'
+    shared.write_text(header + r'''Dialogue: 0,0:00:00.00,0:00:02.00,Default,,0,0,0,,{\i1}这是中文对白\NEnglish reference{\i0}
+Dialogue: 0,0:00:03.00,0:00:04.00,Default,,0,0,0,,English comes first\N这是第二句中文
+Dialogue: 0,0:00:05.00,0:00:06.00,Default,,0,0,0,,English alone in a shared Chinese-named style
+'''.replace(',Default,', ',CN,'), encoding='utf-8')
+    report = prepare(shared, 2)
+    styles, rows = ass_rows(report['path'])
+    assert len(rows) == 5 and report['bilingual']
+    assert [size(styles, row) for row in rows] == [144, 72, 72, 144, 72]
+    assert int(rows[0][7]) > int(rows[1][7]) and int(rows[2][7]) > int(rows[3][7]), 'line order lost'
+    assert rows[1][9].startswith(r'{\i1}'), 'formatting not carried across line break'
+
+    srt = WORK / 'bilingual.srt'
+    srt.write_text('1\n00:00:00,000 --> 00:00:02,000\n<i>这是中文对白</i>\nEnglish reference stays small\n\n'
+                   '2\n00:00:03,000 --> 00:00:04,000\nEnglish appears alone\n\n'
+                   '3\n00:00:04,000 --> 00:00:06,000\nEnglish comes first\n这是另一句中文\n', encoding='utf-8')
+    digest = hashlib.sha256(srt.read_bytes()).hexdigest()
+    for scale in (1, 1.5, 2):
+        report = prepare(srt, scale, srt=True, plain=PLAIN)
+        styles, rows = ass_rows(report['path'])
+        assert report['bilingual'] and not report['native']
+        assert [size(styles, row) for row in rows] == [38 * scale, 38, 38, 38, 38 * scale]
+        assert int(rows[0][7]) > int(rows[1][7]) and int(rows[3][7]) > int(rows[4][7])
+        assert rows[0][1:3] == rows[1][1:3] == ['0:00:00.00', '0:00:02.00']
+        for row in rows:
+            if 'English' in row[9]:
+                assert [float(styles[row[3]][i]) for i in (13, 16, 17)] == [0, 2, 1]
+    assert hashlib.sha256(srt.read_bytes()).hexdigest() == digest
+    bigger = dict(PLAIN, Fontsize=42)
+    assert prepare(srt, srt=True, plain=bigger)['path'] != prepare(srt, srt=True, plain=PLAIN)['path'], 'SRT style cache collision'
+    assert prepare(srt, srt=True, plain=dict(reversed(list(PLAIN.items()))))['path'] == prepare(srt, srt=True, plain=PLAIN)['path'], 'SRT cache depends on JSON property order'
+
+    japanese = WORK / 'bilingual-japanese.srt'
+    japanese.write_text('1\n00:00:00,000 --> 00:00:02,000\n这是中文对白\nこれは日本語です\n\n'
+                        '2\n00:00:03,000 --> 00:00:04,000\n这也是中文\n魔術師\n\n'
+                        '3\n00:00:04,000 --> 00:00:05,000\n这是中文\n2024\n\n'
+                        '4\n00:00:06,000 --> 00:00:07,000\n魔術師\n', encoding='utf-8')
+    report = prepare(japanese, 2, srt=True, plain=PLAIN)
+    styles, rows = ass_rows(report['path'])
+    assert [size(styles, row) for row in rows] == [76, 38, 76, 38, 76, 38, 38]
+    assert report['uncertain'] == 1, 'ambiguous Han-only foreign moment must be reported'
+    ambiguous = WORK / 'ambiguous.srt'
+    ambiguous.write_text('1\n00:00:00,000 --> 00:00:02,000\n你好 / Hello\n', encoding='utf-8')
+    report = prepare(ambiguous, 2, srt=True, plain=PLAIN)
+    styles, rows = ass_rows(report['path'])
+    assert report['uncertain'] == 1 and size(styles, rows[0]) == 38
+    native = prepare(WORK / 'fixture.srt', 2, srt=True, plain=PLAIN)
+    assert native['native'], 'monolingual SRT no longer native'
+    unsafe = WORK / 'special.srt'
+    unsafe.write_text('1\n00:00:00,000 --> 00:00:02,000\n{\\an8}这是中文\nEnglish reference\n', encoding='utf-8')
+    try:
+        prepare(unsafe, srt=True, plain=PLAIN)
+        raise AssertionError('unsupported SRT tags were silently converted')
+    except AssertionError as error:
+        assert 'SRT contains unsupported' in str(error), error
+    unsafe.write_text('1\n00:00:00,000 --> 00:00:02,000\n{\\an8}English reference\n', encoding='utf-8')
+    assert prepare(unsafe, srt=True, plain=PLAIN)['native'], 'special monolingual SRT should remain native'
+
+    player = Player()
+    try:
+        player.cmd('loadfile', str(WORK / 'fixture.mkv'))
+        player.ready()
+        player.cmd('sub-add', str(srt), 'select')
+        player.ready()
+        for scale in (1, 1.5, 2):
+            player.cmd('set_property', 'sub-scale', scale)
+            player.ready()
+            player.screenshot(f'bilingual-srt-{scale}', 1)
+            assert player.get('sub-ass-scale-with-window') is True
+        player.cmd('set_property', 'fullscreen', True)
+        time.sleep(.4)
+        player.ready()
+        player.screenshot('bilingual-srt-fullscreen', 1)
+        player.cmd('set_property', 'fullscreen', False)
+        player.cmd('set_property', 'sub-delay', .25)
+        player.cmd('write-watch-later-config')
+        saved_watch = player.watch
+    finally:
+        player.close()
+    saved = saved_watch / hashlib.md5(str(WORK / 'fixture.mkv').encode()).hexdigest().upper()
+    assert 'sub-ass-force-margins=yes' not in saved.read_text(encoding='utf-8'), 'generated rendering flags leaked into resume'
+    player = Player(watch=saved_watch)
+    try:
+        player.cmd('loadfile', str(WORK / 'fixture.mkv'))
+        player.wait(lambda: (player.get('duration') or 0) > 0)
+        # External subtitles loaded by a command are re-added explicitly in this isolated fixture.
+        player.cmd('sub-add', str(srt), 'select')
+        player.ready()
+        assert abs(player.get('sub-scale') - 2) < .001 and abs(player.get('sub-delay') - .25) < .001
+        player.cmd('set_property', 'sid', 1)
+        player.ready()
+        assert player.get('sub-ass-scale-with-window') is False and player.get('sub-ass-force-margins') is False
+    finally:
+        player.close()
+    print('PASS: Chinese-only scaling, stable foreign moments, English/Japanese, shared ASS, SRT order/format, ambiguity, cache and IPC/resume')
+
+
 if __name__ == '__main__':
     selftest()
+    bilingualtest()
     if '--real' in sys.argv:
         realtest()
