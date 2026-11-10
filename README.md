@@ -59,7 +59,7 @@ mpv/
 
 请先检查：
 1. 当前目录确实是 portable_config，不要创建 portable_config/portable_config 嵌套目录。
-2. 读取当前目录的 AGENTS.md 和 README.md，并遵守其中的规则。
+2. 读取当前目录的 AGENTS.md、README.md 的“已有配置的恢复”及相关安装段落，并遵守其中的规则；需要时再查阅其他段落。
 3. 获取远程 master 的最新提交和文件清单。
 
 同步要求：
@@ -97,6 +97,8 @@ portable_config/
 配置要求 Windows 10/11（64 位）和 MPV 0.41 或更高版本。播放器目录中的 `mpv.exe`、`ffmpeg.exe` 和 `yt-dlp.exe` 属于运行环境，不放入本配置仓库。
 
 ## 配置说明
+
+现行行为以配置和 README 当前说明为准；CHANGELOG 记录带日期的历史，发现不一致时先核对配置和适用版本。
 
 - `mpv.conf`：渲染、硬件解码、HDR、窗口、字幕、音轨默认选择、网络播放、截图和脚本选项。
 - `profiles.conf`：按机器性能切换 `powerful`、`lite` 和 `default` profile；HDR 输出由 `mpv.conf` 根据 Windows 当前显示状态自动选择。
@@ -158,7 +160,7 @@ cache-pause=no
 .\tools\push-and-backup.ps1
 ```
 
-脚本会推送当前分支到 `origin`，确认远程提交号一致后，将当前提交保存为类似 `mpv-config-20260921-120000-<commit>.zip` 的文件。备份目录是 `Z:\downloads\mpv`，其远程对应路径为 `/data/pool/downloads/mpv`；OpenList 地址为 [http://192.168.124.2:5244/N100/downloads/mpv](http://192.168.124.2:5244/N100/downloads/mpv)。
+脚本会推送当前分支并备份对应提交；备份位置、命名和完成要求见 AGENTS.md，具体检查以脚本为准。
 
 ## 许可
 
